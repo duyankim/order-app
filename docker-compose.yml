@@ -27,3 +27,13 @@ services:
       - "8082:8080"
     depends_on:
       - mysql-server
+  
+  delivery-service:
+    build:
+      context: ./DeliveryService
+      dockerfile: Dockerfile
+    image: delivery-service
+    ports:
+      - "8083:8080"
+    depends_on:
+      - mysql-server
