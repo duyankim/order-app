@@ -2,6 +2,8 @@ package com.example.CatalogService.service;
 
 import com.example.CatalogService.cassandra.entity.Product;
 import com.example.CatalogService.cassandra.repository.ProductRepository;
+import com.example.CatalogService.dto.ProductTagsDto;
+import com.example.CatalogService.feign.SearchClient;
 import com.example.CatalogService.mysql.entity.SellerProduct;
 import com.example.CatalogService.mysql.repository.SellerProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,9 @@ public class CatalogService {
 
     @Autowired
     private SellerProductRepository sellerProductRepository;
+
+    @Autowired
+    private SearchClient searchClient;
 
     public Product registerProduct(
             Long sellerId,
@@ -39,10 +44,20 @@ public class CatalogService {
                 .stockCount(stockCount)
                 .tags(tags)
                 .build();
+
+        searchClient.addTagCache(new ProductTagsDto(
+                product.getId(),
+                product.getTags()));
         return productRepository.save(product);
     }
 
     public void deleteProduct(Long productId) {
+        productRepository.findById(productId).ifPresent(product -> {
+            searchClient.removeTagCache(new ProductTagsDto(
+                    product.getId(),
+                    product.getTags()));
+        });
+
         productRepository.deleteById(productId);
         sellerProductRepository.deleteById(productId);
     }
