@@ -5,6 +5,16 @@ spring:
     contact-points: cassandra-node-0
     local-datacenter: dc1
     schema-action: create_if_not_exists
+    request:
+      timeout: 10s
+    connection:
+      connect-timeout: 10s
+      init-query-timeout: 10s
+    initialization:
+      enabled: true
+      keyspace-name: catalog
+      replication-factor: 1
+      replication-class: SimpleStrategy
   datasource:
     url: jdbc:mysql://mysql-server:3306/ecommerce_db?useSSL=false&allowPublicKeyRetrieval=true
     username: root
