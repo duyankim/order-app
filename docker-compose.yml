@@ -5,7 +5,7 @@ services:
   cassandra-node-0:
     image: cassandra
     environment:
-      - CASSANDRA_SEEDS=cassandra-node-0
+      - CASSANDRA_SEEDS=cassandra-node-0,cassandra-node-1,cassandra-node-2
       - CASSANDRA_CLUSTER_NAME=MyCluster
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - CASSANDRA_DC=dc1
@@ -21,11 +21,56 @@ services:
       timeout: 10s
       retries: 50
 
+  cassandra-node-1:
+    image: cassandra
+    environment:
+      - CASSANDRA_SEEDS=cassandra-node-0,cassandra-node-1,cassandra-node-2
+      - CASSANDRA_CLUSTER_NAME=MyCluster
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_DC=dc1
+      - HEAP_NEWSIZE=128M
+      - MAX_HEAP_SIZE=1024M
+    ports:
+      - "17000:7000"
+      - "17001:7001"
+      - "19042:9042"
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces" ]
+      interval: 10s
+      timeout: 10s
+      retries: 50
+
+  cassandra-node-2:
+    image: cassandra
+    environment:
+      - CASSANDRA_SEEDS=cassandra-node-0,cassandra-node-1,cassandra-node-2
+      - CASSANDRA_CLUSTER_NAME=MyCluster
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_DC=dc1
+      - HEAP_NEWSIZE=128M
+      - MAX_HEAP_SIZE=1024M
+    ports:
+      - "27000:7000"
+      - "27001:7001"
+      - "29042:9042"
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces" ]
+      interval: 10s
+      timeout: 10s
+      retries: 50
+
   myredis:
     image: redis
     hostname: myredis
     ports:
       - "6379:6379"
+    depends_on:
+      cassandra-node-0:
+        condition: service_healthy
+      cassandra-node-1:
+        condition: service_healthy
+      cassandra-node-2:
+        condition: service_healthy
 
   mysql-server:
     image: mysql
@@ -83,7 +128,8 @@ services:
     ports:
       - "8084:8080"
     depends_on:
-      - mysql-server
+      mysql-server:
+        condition: service_healthy
   
   catalog-service:
     build:
@@ -93,4 +139,16 @@ services:
     ports:
       - "8085:8080"
     depends_on:
-      - mysql-server
+      mysql-server:
+        condition: service_healthy
+
+  order-service:
+    build:
+      context: ./OrderService
+      dockerfile: Dockerfile
+    image: order-service
+    ports:
+      - "8086:8080"
+    depends_on:
+      mysql-server:
+        condition: service_healthy

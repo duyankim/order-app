@@ -13,10 +13,6 @@ java {
 	}
 }
 
-jar {
-	archiveFileName = "MemberService.jar"
-}
-
 repositories {
 	mavenCentral()
 }
