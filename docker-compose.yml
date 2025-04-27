@@ -5,16 +5,16 @@ services:
   cassandra-node-0:
     image: cassandra
     environment:
-      - CASSANDRA_SEEDS=cassandra-node-0,cassandra-node-1,cassandra-node-2
-      - CASSANDRA_CLUSTER_NAME=MyCluster
+      - CASSANDRA_SEEDS=${CASSANDRA_SEEDS}
+      - CASSANDRA_CLUSTER_NAME=${CASSANDRA_CLUSTER_NAME}
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      - CASSANDRA_DC=dc1
-      - HEAP_NEWSIZE=128M
-      - MAX_HEAP_SIZE=1024M
+      - CASSANDRA_DC=${CASSANDRA_DC}
+      - HEAP_NEWSIZE=${HEAP_NEWSIZE}
+      - MAX_HEAP_SIZE=${MAX_HEAP_SIZE}
     ports:
-      - "7000:7000"   # 노드간 클러스터 내부 통신
-      - "7001:7001"   # 노드간 보안 통신에 사용
-      - "9042:9042"   # CQL 클라이언트와 통신
+      - "${CASSANDRA_NODE0_PORT1}:7000" # 노드간 클러스터 내부 통신
+      - "${CASSANDRA_NODE0_PORT2}:7001" # 노드간 보안 통신에 사용
+      - "${CASSANDRA_NODE0_PORT3}:9042" # CQL 클라이언트와 통신
     healthcheck:
       test: ["CMD", "cqlsh", "-e", "describe keyspaces" ]
       interval: 10s
@@ -24,16 +24,16 @@ services:
   cassandra-node-1:
     image: cassandra
     environment:
-      - CASSANDRA_SEEDS=cassandra-node-0,cassandra-node-1,cassandra-node-2
-      - CASSANDRA_CLUSTER_NAME=MyCluster
+      - CASSANDRA_SEEDS=${CASSANDRA_SEEDS}
+      - CASSANDRA_CLUSTER_NAME=${CASSANDRA_CLUSTER_NAME}
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      - CASSANDRA_DC=dc1
-      - HEAP_NEWSIZE=128M
-      - MAX_HEAP_SIZE=1024M
+      - CASSANDRA_DC=${CASSANDRA_DC}
+      - HEAP_NEWSIZE=${HEAP_NEWSIZE}
+      - MAX_HEAP_SIZE=${MAX_HEAP_SIZE}
     ports:
-      - "17000:7000"
-      - "17001:7001"
-      - "19042:9042"
+      - "${CASSANDRA_NODE1_PORT1}:7000"
+      - "${CASSANDRA_NODE1_PORT2}:7001"
+      - "${CASSANDRA_NODE1_PORT3}:9042"
     healthcheck:
       test: ["CMD", "cqlsh", "-e", "describe keyspaces" ]
       interval: 10s
@@ -43,16 +43,16 @@ services:
   cassandra-node-2:
     image: cassandra
     environment:
-      - CASSANDRA_SEEDS=cassandra-node-0,cassandra-node-1,cassandra-node-2
-      - CASSANDRA_CLUSTER_NAME=MyCluster
+      - CASSANDRA_SEEDS=${CASSANDRA_SEEDS}
+      - CASSANDRA_CLUSTER_NAME=${CASSANDRA_CLUSTER_NAME}
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      - CASSANDRA_DC=dc1
-      - HEAP_NEWSIZE=128M
-      - MAX_HEAP_SIZE=1024M
+      - CASSANDRA_DC=${CASSANDRA_DC}
+      - HEAP_NEWSIZE=${HEAP_NEWSIZE}
+      - MAX_HEAP_SIZE=${MAX_HEAP_SIZE}
     ports:
-      - "27000:7000"
-      - "27001:7001"
-      - "29042:9042"
+      - "${CASSANDRA_NODE2_PORT1}:7000"
+      - "${CASSANDRA_NODE2_PORT2}:7001"
+      - "${CASSANDRA_NODE2_PORT3}:9042"
     healthcheck:
       test: ["CMD", "cqlsh", "-e", "describe keyspaces" ]
       interval: 10s
@@ -63,7 +63,7 @@ services:
     image: redis
     hostname: myredis
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:6379"
     depends_on:
       cassandra-node-0:
         condition: service_healthy
@@ -75,12 +75,12 @@ services:
   mysql-server:
     image: mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=1234
-      - MYSQL_DATABASE=ecommerce_db  
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT}:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1234"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -93,29 +93,41 @@ services:
       dockerfile: Dockerfile
     image: member-service
     ports:
-      - "8081:8080"
+      - "${MEMBER_SERVICE_PORT}:8080"
+    environment:
+    - DB_URL=${DB_URL}
+    - DB_USERNAME=${DB_USERNAME}
+    - DB_PASSWORD=${DB_PASSWORD}
     depends_on:
       mysql-server:
         condition: service_healthy
-  
+
   payment-service:
     build:
       context: ./PaymentService
       dockerfile: Dockerfile
     image: payment-service
     ports:
-      - "8082:8080"
+      - "${PAYMENT_SERVICE_PORT}:8080"
+    environment:
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
     depends_on:
       mysql-server:
         condition: service_healthy
-  
+
   delivery-service:
     build:
       context: ./DeliveryService
       dockerfile: Dockerfile
     image: delivery-service
     ports:
-      - "8083:8080"
+      - "${DELIVERY_SERVICE_PORT}:8080"
+    environment:
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
     depends_on:
       mysql-server:
         condition: service_healthy
@@ -126,20 +138,29 @@ services:
       dockerfile: Dockerfile
     image: search-service
     ports:
-      - "8084:8080"
+      - "${SEARCH_SERVICE_PORT}:8080"
     depends_on:
       mysql-server:
         condition: service_healthy
-  
+
   catalog-service:
     build:
       context: ./CatalogService
       dockerfile: Dockerfile
     image: catalog-service
     ports:
-      - "8085:8080"
+      - "${CATALOG_SERVICE_PORT}:8080"
+    environment:
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - CASSANDRA_CONTACT_POINTS=${CASSANDRA_CONTACT_POINTS}
+      - CASSANDRA_PORT=${CASSANDRA_PORT}
+      - CASSANDRA_LOCAL_DATACENTER=${CASSANDRA_LOCAL_DATACENTER}
     depends_on:
       mysql-server:
+        condition: service_healthy
+      cassandra-node-0:
         condition: service_healthy
 
   order-service:
@@ -148,7 +169,11 @@ services:
       dockerfile: Dockerfile
     image: order-service
     ports:
-      - "8086:8080"
+      - "${ORDER_SERVICE_PORT}:8080"
+    environment:
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
     depends_on:
       mysql-server:
         condition: service_healthy

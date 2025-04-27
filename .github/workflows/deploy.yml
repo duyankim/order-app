@@ -1,0 +1,83 @@
+# 📂 .github/workflows/deploy.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: my-ecommerce-service
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 코드 체크아웃
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      # 2. JDK 설정
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. Gradle 빌드
+      - name: Build MemberService
+        run: |
+          cd MemberService
+          ./gradlew clean build -x test
+
+      - name: Build Docker Image for MemberService
+        run: |
+          cd MemberService
+          docker build -t ${{ secrets.ECR_REGISTRY }}/member-service:${{ github.sha }} .
+
+      - name: Build DeliveryService
+        run: |
+          cd ../DeliveryService
+          ./gradlew clean build -x test
+
+      - name: Build Docker Image for DeliveryService
+        run: |
+          cd DeliveryService
+          docker build -t ${{ secrets.ECR_REGISTRY }}/delivery-service:${{ github.sha }} .
+
+      # 4. AWS 로그인 (ECR)
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # 5. Docker 이미지 빌드 & 푸시
+      - name: Build Docker image
+        run: |
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+
+      # 6. EC2 SSH 접속 → 컨테이너 재시작
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            docker pull ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+            docker stop ecommerce || true
+            docker rm ecommerce || true
+            docker run -d --name ecommerce -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
