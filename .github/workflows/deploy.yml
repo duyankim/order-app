@@ -7,7 +7,7 @@ on:
 
 env:
   AWS_REGION: ap-northeast-2
-  ECR_REPOSITORY: my-ecommerce-service
+  ECR_REPOSITORY: ecommerce
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
@@ -34,7 +34,6 @@ jobs:
 
       - name: Build Docker Image for MemberService
         run: |
-          cd MemberService
           docker build -t ${{ secrets.ECR_REGISTRY }}/member-service:${{ github.sha }} .
 
       - name: Build DeliveryService
@@ -44,7 +43,6 @@ jobs:
 
       - name: Build Docker Image for DeliveryService
         run: |
-          cd DeliveryService
           docker build -t ${{ secrets.ECR_REGISTRY }}/delivery-service:${{ github.sha }} .
 
       # 4. AWS 로그인 (ECR)
