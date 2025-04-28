@@ -2,11 +2,11 @@ package com.example.CatalogService.service;
 
 import com.example.CatalogService.cassandra.entity.Product;
 import com.example.CatalogService.cassandra.repository.ProductRepository;
-import com.example.CatalogService.dto.ProductTagsDto;
-import com.example.CatalogService.feign.SearchClient;
 import com.example.CatalogService.mysql.entity.SellerProduct;
 import com.example.CatalogService.mysql.repository.SellerProductRepository;
+import ecommerce.protobuf.EdaMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ public class CatalogService {
     private SellerProductRepository sellerProductRepository;
 
     @Autowired
-    private SearchClient searchClient;
+    private KafkaTemplate<String, byte[]> kafkaTemplate;
 
     public Product registerProduct(
             Long sellerId,
@@ -45,17 +45,26 @@ public class CatalogService {
                 .tags(tags)
                 .build();
 
-        searchClient.addTagCache(new ProductTagsDto(
-                product.getId(),
-                product.getTags()));
+        // 상품 추가 이벤트 발행
+        var message = EdaMessage.ProductTags.newBuilder()
+                .setProductId(product.getId())
+                .addAllTags(tags)
+                .build();
+
+        kafkaTemplate.send("product_tags_added", message.toByteArray());
+
         return productRepository.save(product);
     }
 
     public void deleteProduct(Long productId) {
         productRepository.findById(productId).ifPresent(product -> {
-            searchClient.removeTagCache(new ProductTagsDto(
-                    product.getId(),
-                    product.getTags()));
+            // 상품 삭제 이벤트 발행
+            var message = EdaMessage.ProductTags.newBuilder()
+                    .setProductId(product.getId())
+                    .addAllTags(product.getTags())
+                    .build();
+
+            kafkaTemplate.send("product_tags_removed", message.toByteArray());
         });
 
         productRepository.deleteById(productId);
