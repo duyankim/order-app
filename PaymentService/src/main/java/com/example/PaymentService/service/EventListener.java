@@ -22,7 +22,7 @@ public class EventListener {
     private KafkaTemplate<String, byte[]> kafkaTemplate;
 
     @KafkaListener(topics = "payment_request")
-    public void consumeTagAdded(byte[] message) throws Exception {
+    public void consumePaymentResult(byte[] message) throws Exception {
         var object = EdaMessage.PaymentRequestV1.parseFrom(message);
 
         logger.info("[payment_request] consumed: {}", object);
