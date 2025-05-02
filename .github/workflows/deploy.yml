@@ -38,12 +38,21 @@ jobs:
 
       - name: Build DeliveryService
         run: |
-          cd ../DeliveryService
+          cd DeliveryService
           ./gradlew clean build -x test
 
       - name: Build Docker Image for DeliveryService
         run: |
           docker build -t ${{ secrets.ECR_REGISTRY }}/delivery-service:${{ github.sha }} -f DeliveryService/Dockerfile DeliveryService
+
+      - name: Build PaymentService
+        run: |
+          cd PaymentService
+          ./gradlew clean build -x test
+
+      - name: Build Docker Image for PaymentService
+        run: |
+          docker build -t ${{ secrets.ECR_REGISTRY }}/delivery-service:${{ github.sha }} -f PaymentService/Dockerfile PaymentService
 
       # 4. AWS 로그인 (ECR)
       - name: Configure AWS credentials
