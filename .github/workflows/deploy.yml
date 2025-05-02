@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Docker Image for MemberService
         run: |
-          docker build -t ${{ secrets.ECR_REGISTRY }}/member-service:${{ github.sha }} .
+          docker build -t ${{ secrets.ECR_REGISTRY }}/member-service:${{ github.sha }} -f MemberService/Dockerfile MemberService
 
       - name: Build DeliveryService
         run: |
@@ -43,7 +43,7 @@ jobs:
 
       - name: Build Docker Image for DeliveryService
         run: |
-          docker build -t ${{ secrets.ECR_REGISTRY }}/delivery-service:${{ github.sha }} .
+          docker build -t ${{ secrets.ECR_REGISTRY }}/delivery-service:${{ github.sha }} -f DeliveryService/Dockerfile DeliveryService
 
       # 4. AWS 로그인 (ECR)
       - name: Configure AWS credentials
