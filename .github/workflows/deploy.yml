@@ -52,7 +52,7 @@ jobs:
 
       - name: Build Docker Image for PaymentService
         run: |
-          docker build -t ${{ secrets.ECR_REGISTRY }}/delivery-service:${{ github.sha }} -f PaymentService/Dockerfile PaymentService
+          docker build -t ${{ secrets.ECR_REGISTRY }}/payment-service:${{ github.sha }} -f PaymentService/Dockerfile PaymentService
 
       # 4. AWS 로그인 (ECR)
       - name: Configure AWS credentials
@@ -67,10 +67,23 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       # 5. Docker 이미지 빌드 & 푸시
-      - name: Build Docker image
+      - name: Tag & Push MemberService image
         run: |
-          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
-          docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag ${{ secrets.ECR_REGISTRY }}/member-service:${{ github.sha }} \
+                     ${{ steps.login-ecr.outputs.registry }}/ecommerce/member-service:${{ github.sha }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/ecommerce/member-service:${{ github.sha }}
+      
+      - name: Tag & Push DeliveryService image
+        run: |
+          docker tag ${{ secrets.ECR_REGISTRY }}/delivery-service:${{ github.sha }} \
+                     ${{ steps.login-ecr.outputs.registry }}/ecommerce/delivery-service:${{ github.sha }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/ecommerce/delivery-service:${{ github.sha }}
+
+      - name: Tag & Push PaymentService image
+        run: |
+          docker tag ${{ secrets.ECR_REGISTRY }}/payment-service:${{ github.sha }} \
+                     ${{ steps.login-ecr.outputs.registry }}/ecommerce/payment-service:${{ github.sha }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/ecommerce/payment-service:${{ github.sha }}
 
       - name: Push Docker image to ECR
         run: |
