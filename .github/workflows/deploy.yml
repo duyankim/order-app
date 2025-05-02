@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Docker Image for MemberService
         run: |
-          docker build -t ${{ secrets.ECR_REGISTRY }}/member-service:${{ github.sha }} -f MemberService/Dockerfile MemberService
+          docker build -t member-service:${{ github.sha }} -f MemberService/Dockerfile MemberService
 
       - name: Build DeliveryService
         run: |
@@ -43,7 +43,7 @@ jobs:
 
       - name: Build Docker Image for DeliveryService
         run: |
-          docker build -t ${{ secrets.ECR_REGISTRY }}/delivery-service:${{ github.sha }} -f DeliveryService/Dockerfile DeliveryService
+          docker build -t delivery-service:${{ github.sha }} -f DeliveryService/Dockerfile DeliveryService
 
       - name: Build PaymentService
         run: |
@@ -52,7 +52,7 @@ jobs:
 
       - name: Build Docker Image for PaymentService
         run: |
-          docker build -t ${{ secrets.ECR_REGISTRY }}/payment-service:${{ github.sha }} -f PaymentService/Dockerfile PaymentService
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:payment-service-${{ github.sha }}
 
       # 4. AWS 로그인 (ECR)
       - name: Configure AWS credentials
