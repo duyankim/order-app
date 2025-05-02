@@ -66,28 +66,24 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      # 5. Docker 이미지 빌드 & 푸시
-      - name: Tag & Push MemberService image
+      # 5. Docker 태그 + 푸시 (서비스 구분을 tag로)
+      - name: Tag & Push MemberService
         run: |
-          docker tag ${{ secrets.ECR_REGISTRY }}/member-service:${{ github.sha }} \
-                     ${{ steps.login-ecr.outputs.registry }}/ecommerce/member-service:${{ github.sha }}
-          docker push ${{ steps.login-ecr.outputs.registry }}/ecommerce/member-service:${{ github.sha }}
-      
-      - name: Tag & Push DeliveryService image
-        run: |
-          docker tag ${{ secrets.ECR_REGISTRY }}/delivery-service:${{ github.sha }} \
-                     ${{ steps.login-ecr.outputs.registry }}/ecommerce/delivery-service:${{ github.sha }}
-          docker push ${{ steps.login-ecr.outputs.registry }}/ecommerce/delivery-service:${{ github.sha }}
+          docker tag member-service:${{ github.sha }} \
+            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:member-service-${{ github.sha }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:member-service-${{ github.sha }}
 
-      - name: Tag & Push PaymentService image
+      - name: Tag & Push DeliveryService
         run: |
-          docker tag ${{ secrets.ECR_REGISTRY }}/payment-service:${{ github.sha }} \
-                     ${{ steps.login-ecr.outputs.registry }}/ecommerce/payment-service:${{ github.sha }}
-          docker push ${{ steps.login-ecr.outputs.registry }}/ecommerce/payment-service:${{ github.sha }}
+          docker tag delivery-service:${{ github.sha }} \
+            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:delivery-service-${{ github.sha }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:delivery-service-${{ github.sha }}
 
-      - name: Push Docker image to ECR
+      - name: Tag & Push PaymentService
         run: |
-          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag payment-service:${{ github.sha }} \
+            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:payment-service-${{ github.sha }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:payment-service-${{ github.sha }}
 
       # 6. EC2 SSH 접속 → 컨테이너 재시작
       - name: Deploy to EC2
