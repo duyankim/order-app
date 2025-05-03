@@ -98,6 +98,9 @@ jobs:
             REGISTRY="${{ secrets.ECR_REGISTRY }}"
             IMAGE="$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
+            echo "🔐 Logging in to ECR"
+            aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $REGISTRY
+
             echo "🚀 Pulling image: $IMAGE"
             docker pull $IMAGE
 
