@@ -93,7 +93,17 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           script: |
-            docker pull ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+            ECR_REPOSITORY="ecommerce"
+            IMAGE_TAG="${{ github.sha }}"
+            REGISTRY="${{ secrets.ECR_REGISTRY }}"
+            IMAGE="$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+            echo "🚀 Pulling image: $IMAGE"
+            docker pull $IMAGE
+
+            echo "🛑 Stopping existing container (if any)"
             docker stop ecommerce || true
             docker rm ecommerce || true
-            docker run -d --name ecommerce -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+
+            echo "🔄 Running new container"
+            docker run -d --name ecommerce -p 8080:8080 $IMAGE
