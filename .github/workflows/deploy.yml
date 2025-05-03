@@ -52,7 +52,7 @@ jobs:
 
       - name: Build Docker Image for PaymentService
         run: |
-          docker build -t delivery-service:${{ github.sha }} -f PaymentService/Dockerfile PaymentService
+          docker build -t payment-service:${{ github.sha }} -f PaymentService/Dockerfile PaymentService
 
       # 4. AWS 로그인 (ECR)
       - name: Configure AWS credentials
