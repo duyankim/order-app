@@ -93,20 +93,34 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           script: |
-            IMAGE_TAG="${{ github.sha }}"
             REGION="${{ secrets.AWS_REGION }}"
             REGISTRY="${{ secrets.ECR_REGISTRY }}"
-            IMAGE="$REGISTRY:$IMAGE_TAG"
-
+      
             echo "🔐 Logging in to ECR"
             aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $REGISTRY
+      
+            for SERVICE in member-service delivery-service payment-service
+            do
+              IMAGE_TAG="$SERVICE-${{ github.sha }}"
+              IMAGE="$REGISTRY/ecommerce:$IMAGE_TAG"
+      
+              echo "🚀 Pulling image: $IMAGE"
+              docker pull $IMAGE
+      
+              echo "🛑 Stopping existing container: $SERVICE"
+              docker stop $SERVICE || true
+              docker rm $SERVICE || true
+      
+              echo "🔄 Running new container: $SERVICE"
+              docker run -d --name $SERVICE -p $(get_port $SERVICE):8080 $IMAGE
+            done
+      
+            # 동적으로 서비스별 포트 매핑
+            function get_port() {
+              case "$1" in
+                member-service) echo 8081 ;;
+                delivery-service) echo 8082 ;;
+                payment-service) echo 8083 ;;
+              esac
+            }
 
-            echo "🚀 Pulling image: $IMAGE"
-            docker pull $IMAGE
-
-            echo "🛑 Stopping existing container"
-            docker stop ecommerce || true
-            docker rm ecommerce || true
-
-            echo "🔄 Running new container"
-            docker run -d --name ecommerce -p 8080:8080 $IMAGE
