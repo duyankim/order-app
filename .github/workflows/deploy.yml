@@ -105,7 +105,7 @@ jobs:
             echo "🚀 Pulling image: $IMAGE"
             docker pull $IMAGE
 
-            echo "🛑 Stopping existing container (if any)"
+            echo "🛑 Stopping existing container"
             docker stop ecommerce || true
             docker rm ecommerce || true
 
