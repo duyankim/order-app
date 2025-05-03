@@ -95,7 +95,7 @@ jobs:
           script: |
             ECR_REPOSITORY="ecommerce"
             IMAGE_TAG="${{ github.sha }}"
-            REGION=${{ secrets.AWS_REGION }}"
+            REGION="${{ secrets.AWS_REGION }}"
             REGISTRY="${{ secrets.ECR_REGISTRY }}"
             IMAGE="$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
