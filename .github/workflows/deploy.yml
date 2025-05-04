@@ -94,7 +94,8 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             REGION="${{ secrets.AWS_REGION }}"
-            REGISTRY="${{ secrets.ECR_REGISTRY }}"
+            REGISTRY="519904985899.dkr.ecr.ap-northeast-2.amazonaws.com"
+            REPO="ecommerce"
       
             echo "🔐 Logging in to ECR"
             aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $REGISTRY
@@ -110,7 +111,7 @@ jobs:
             for SERVICE in member-service delivery-service payment-service
             do
               IMAGE_TAG="$SERVICE-${{ github.sha }}"
-              IMAGE="$REGISTRY/ecommerce:$IMAGE_TAG"
+              IMAGE="$REGISTRY/$REPO:$IMAGE_TAG"
       
               echo "🚀 Pulling image: $IMAGE"
               sudo docker pull $IMAGE
@@ -127,4 +128,5 @@ jobs:
                 -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
                 $IMAGE
             done
+
 
