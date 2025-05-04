@@ -112,7 +112,12 @@ jobs:
               docker rm $SERVICE || true
       
               echo "🔄 Running new container: $SERVICE"
-              docker run -d --name $SERVICE -p $(get_port $SERVICE):8080 $IMAGE
+              docker run -d --name $SERVICE \
+                -p $(get_port $SERVICE):8080 \
+                -e DB_URL="${{ secrets.DB_URL }}" \
+                -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
+                -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+                $IMAGE
             done
       
             # 동적으로 서비스별 포트 매핑
