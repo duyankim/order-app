@@ -99,28 +99,6 @@ jobs:
             echo "🔐 Logging in to ECR"
             aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $REGISTRY
       
-            for SERVICE in member-service delivery-service payment-service
-            do
-              IMAGE_TAG="$SERVICE-${{ github.sha }}"
-              IMAGE="$REGISTRY/ecommerce:$IMAGE_TAG"
-      
-              echo "🚀 Pulling image: $IMAGE"
-              docker pull $IMAGE
-      
-              echo "🛑 Stopping existing container: $SERVICE"
-              docker stop $SERVICE || true
-              docker rm $SERVICE || true
-      
-              echo "🔄 Running new container: $SERVICE"
-              docker run -d --name $SERVICE \
-                -p $(get_port $SERVICE):8080 \
-                -e DB_URL="${{ secrets.DB_URL }}" \
-                -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
-                -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-                $IMAGE
-            done
-      
-            # 동적으로 서비스별 포트 매핑
             function get_port() {
               case "$1" in
                 member-service) echo 8081 ;;
@@ -128,4 +106,25 @@ jobs:
                 payment-service) echo 8083 ;;
               esac
             }
+      
+            for SERVICE in member-service delivery-service payment-service
+            do
+              IMAGE_TAG="$SERVICE-${{ github.sha }}"
+              IMAGE="$REGISTRY/ecommerce:$IMAGE_TAG"
+      
+              echo "🚀 Pulling image: $IMAGE"
+              sudo docker pull $IMAGE
+      
+              echo "🛑 Stopping existing container: $SERVICE"
+              sudo docker stop $SERVICE || true
+              sudo docker rm $SERVICE || true
+      
+              echo "🔄 Running new container: $SERVICE"
+              sudo docker run -d --name $SERVICE \
+                -p $(get_port $SERVICE):8080 \
+                -e DB_URL="${{ secrets.DB_URL }}" \
+                -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
+                -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+                $IMAGE
+            done
 
