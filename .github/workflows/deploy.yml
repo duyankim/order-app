@@ -93,40 +93,6 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           script: |
-            REGION="${{ secrets.AWS_REGION }}"
-            REGISTRY="519904985899.dkr.ecr.ap-northeast-2.amazonaws.com"
-            REPO="ecommerce"
-      
-            echo "🔐 Logging in to ECR"
-            aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $REGISTRY
-      
-            function get_port() {
-              case "$1" in
-                member-service) echo 8081 ;;
-                delivery-service) echo 8082 ;;
-                payment-service) echo 8083 ;;
-              esac
-            }
-      
-            for SERVICE in member-service delivery-service payment-service
-            do
-              IMAGE_TAG="$SERVICE-${{ github.sha }}"
-              IMAGE="$REGISTRY/$REPO:$IMAGE_TAG"
-      
-              echo "🚀 Pulling image: $IMAGE"
-              sudo docker pull $IMAGE
-      
-              echo "🛑 Stopping existing container: $SERVICE"
-              sudo docker stop $SERVICE || true
-              sudo docker rm $SERVICE || true
-      
-              echo "🔄 Running new container: $SERVICE"
-              sudo docker run -d --name $SERVICE \
-                -p $(get_port $SERVICE):8080 \
-                -e DB_URL="${{ secrets.DB_URL }}" \
-                -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
-                -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-                $IMAGE
-            done
+            bash ~/deploy.sh ${{ github.sha }}
 
 
