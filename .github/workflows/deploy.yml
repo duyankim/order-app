@@ -93,7 +93,7 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           script: |
-            cd /home/ec2-user/your-app-folder
+            cd /home/ec2-user
             echo "🔄 Pulling latest images"
             docker-compose pull
             echo "🚀 Recreating containers"
