@@ -86,13 +86,17 @@ jobs:
           docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:payment-service-${{ github.sha }}
 
       # 6. EC2 SSH 접속 → 컨테이너 재시작
-      - name: Deploy to EC2
+      - name: Deploy via SSH and docker-compose
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           script: |
-            bash ~/deploy.sh ${{ github.sha }}
+            cd /home/ec2-user/your-app-folder
+            echo "🔄 Pulling latest images"
+            docker-compose pull
+            echo "🚀 Recreating containers"
+            docker-compose up -d
 
 
