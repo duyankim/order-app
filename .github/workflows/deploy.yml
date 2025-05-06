@@ -83,25 +83,7 @@ jobs:
           echo "💳 Tagging & Pushing PaymentService"
           docker tag payment-service:$SHA $REGISTRY/$ECR_REPOSITORY:payment-service-$SHA
           docker push $REGISTRY/$ECR_REPOSITORY:payment-service-$SHA
-
-      - name: Tag & Push MemberService
-      - run: |
-          docker tag member-service:${{ github.sha }} \
-            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:member-service-${{ github.sha }}
-          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:member-service-${{ github.sha }}
-
-      - name: Tag & Push DeliveryService
-        run: |
-          docker tag delivery-service:${{ github.sha }} \
-            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:delivery-service-${{ github.sha }}
-          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:delivery-service-${{ github.sha }}
-
-      - name: Tag & Push PaymentService
-        run: |
-          docker tag payment-service:${{ github.sha }} \
-            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:payment-service-${{ github.sha }}
-          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:payment-service-${{ github.sha }}
-
+          
       # 6. EC2 SSH 접속 → 컨테이너 재시작
       - name: Deploy via SSH and docker-compose
         uses: appleboy/ssh-action@v1.0.0
