@@ -99,6 +99,11 @@ jobs:
           envs: GITHUB_SHA,AWS_REGION,ECR_REGISTRY,ECR_REPOSITORY
           script: |
             cd /home/ec2-user
+                      
+            echo "📄 Writing .env file"
+            echo "GITHUB_SHA=$GITHUB_SHA" > .env
+            echo "ECR_REGISTRY=$ECR_REGISTRY" >> .env
+            echo "ECR_REPOSITORY=$ECR_REPOSITORY" >> .env
       
             echo "🔐 Logging in to ECR"
             aws ecr get-login-password --region $AWS_REGION | \
