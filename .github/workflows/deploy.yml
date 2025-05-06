@@ -67,8 +67,25 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       # 5. Docker 태그 + 푸시 (서비스 구분을 tag로)
-      - name: Tag & Push MemberService
+      - name: Tag & Push Docker Images
         run: |
+          REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          SHA=${{ github.sha }}
+      
+          echo "🪪 Tagging & Pushing MemberService"
+          docker tag member-service:$SHA $REGISTRY/$ECR_REPOSITORY:member-service-$SHA
+          docker push $REGISTRY/$ECR_REPOSITORY:member-service-$SHA
+      
+          echo "📦 Tagging & Pushing DeliveryService"
+          docker tag delivery-service:$SHA $REGISTRY/$ECR_REPOSITORY:delivery-service-$SHA
+          docker push $REGISTRY/$ECR_REPOSITORY:delivery-service-$SHA
+      
+          echo "💳 Tagging & Pushing PaymentService"
+          docker tag payment-service:$SHA $REGISTRY/$ECR_REPOSITORY:payment-service-$SHA
+          docker push $REGISTRY/$ECR_REPOSITORY:payment-service-$SHA
+
+      - name: Tag & Push MemberService
+      - run: |
           docker tag member-service:${{ github.sha }} \
             ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:member-service-${{ github.sha }}
           docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:member-service-${{ github.sha }}
