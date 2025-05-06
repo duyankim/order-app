@@ -100,13 +100,19 @@ jobs:
           envs: GITHUB_SHA,AWS_REGION,ECR_REGISTRY,ECR_REPOSITORY
           script: |
             cd /home/ec2-user
-
+      
             echo "🔐 Logging in to ECR"
             aws ecr get-login-password --region $AWS_REGION | \
             docker login --username AWS --password-stdin $ECR_REGISTRY
-            
+      
             echo "🔄 Pulling latest images"
+            ECR_REGISTRY=$ECR_REGISTRY \
+            ECR_REPOSITORY=$ECR_REPOSITORY \
+            GITHUB_SHA=$GITHUB_SHA \
             docker compose pull
-            
+      
             echo "🚀 Recreating containers"
+            ECR_REGISTRY=$ECR_REGISTRY \
+            ECR_REPOSITORY=$ECR_REPOSITORY \
+            GITHUB_SHA=$GITHUB_SHA \
             docker compose up -d
