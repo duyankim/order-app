@@ -25,7 +25,7 @@ public class OutboxService {
                 PaymentOutbox.builder()
                         .aggregateType(enrichedDomainEvent.getAggregateType())
                         .aggregateId(enrichedDomainEvent.getAggregateId())
-                        .eventType("payment-result")
+                        .eventType("payment_result")
                         .payload(objectMapper.convertValue(enrichedDomainEvent.getDomainEvent(), JsonNode.class))
                         .build()
         );
