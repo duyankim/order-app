@@ -102,12 +102,14 @@ jobs:
                       
             echo "📄 Writing .env file"
             echo "GITHUB_SHA=$GITHUB_SHA" >> .env
-            echo "ECR_REGISTRY=$ECR_REGISTRY" >> .env
-            echo "ECR_REPOSITORY=$ECR_REPOSITORY" >> .env
+
+            echo $ECR_REGISTRY
+            echo $ECR_REPOSITORY
+            echo $GITHUB_SHA
       
             echo "🔐 Logging in to ECR"
             aws ecr get-login-password --region $AWS_REGION | \
-            docker login --username AWS --password-stdin $ECR_REGISTRY
+            docker login --username AWS --password-stdin $ECR_REGISTRY || { echo "❌ ECR login failed"; exit 1; }
       
             echo "🔄 Pulling latest images"
             ECR_REGISTRY=$ECR_REGISTRY \
