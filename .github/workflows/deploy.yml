@@ -90,7 +90,7 @@ jobs:
         env:
           GITHUB_SHA: ${{ github.sha }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -99,9 +99,6 @@ jobs:
           envs: GITHUB_SHA,AWS_REGION,ECR_REGISTRY,ECR_REPOSITORY
           script: |
             cd /home/ec2-user
-                      
-            echo "📄 Writing .env file"
-            echo "GITHUB_SHA=$GITHUB_SHA" >> .env
 
             echo $ECR_REGISTRY
             echo $ECR_REPOSITORY
