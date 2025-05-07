@@ -4,11 +4,15 @@ import com.example.PaymentService.entity.Payment;
 import com.example.PaymentService.entity.PaymentMethod;
 import com.example.PaymentService.enums.PaymentMethodType;
 import com.example.PaymentService.enums.PaymentStatus;
+import com.example.PaymentService.event.EnrichedDomainEvent;
+import com.example.PaymentService.event.PaymentResultDomainEvent;
 import com.example.PaymentService.pg.CreditCardPaymentAdapter;
 import com.example.PaymentService.repository.PaymentMethodRepository;
 import com.example.PaymentService.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PaymentService {
@@ -22,6 +26,12 @@ public class PaymentService {
     @Autowired
     private CreditCardPaymentAdapter creditCardPaymentAdapter;
 
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    private OutboxService outboxService;
+
     public PaymentMethod registerPaymentMethod (
             Long userId,
             PaymentMethodType paymentMethodType,
@@ -31,6 +41,7 @@ public class PaymentService {
         return paymentMethodRepository.save(paymentMethod);
     }
 
+    @Transactional
     public Payment processPayment (
             Long userId,
             Long orderId,
@@ -56,7 +67,21 @@ public class PaymentService {
                 .paymentStatus(PaymentStatus.COMPLETED)
                 .referenceCode(referenceCode)
                 .build();
-        return paymentRepository.save(payment);
+        payment = paymentRepository.save(payment);
+
+        outboxService.handlePaymentResultDomainEvent(
+                EnrichedDomainEvent.builder()
+                        .aggregateType("payment")
+                        .aggregateId(payment.getOrderId().toString())
+                        .domainEvent(
+                                PaymentResultDomainEvent.builder()
+                                        .orderId(payment.getOrderId().toString())
+                                        .paymentId(payment.getId().toString())
+                                        .paymentStatus(payment.getPaymentStatus().toString())
+                                        .build()
+                        ).build());
+
+        return payment;
     }
 
     public PaymentMethod getPaymentMethodByUser(Long userId) {
