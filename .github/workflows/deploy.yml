@@ -101,7 +101,7 @@ jobs:
             cd /home/ec2-user
                       
             echo "📄 Writing .env file"
-            echo "GITHUB_SHA=$GITHUB_SHA" > .env
+            echo "GITHUB_SHA=$GITHUB_SHA" >> .env
             echo "ECR_REGISTRY=$ECR_REGISTRY" >> .env
             echo "ECR_REPOSITORY=$ECR_REPOSITORY" >> .env
       
