@@ -3,6 +3,8 @@ package com.example.OrderService.service;
 import com.example.OrderService.dto.*;
 import com.example.OrderService.entity.ProductOrder;
 import com.example.OrderService.enums.OrderStatus;
+import com.example.OrderService.event.EnrichedDomainEvent;
+import com.example.OrderService.event.OrderFinishedEvent;
 import com.example.OrderService.feign.CatalogClient;
 import com.example.OrderService.feign.DeliveryClient;
 import com.example.OrderService.feign.PaymentClient;
@@ -11,6 +13,7 @@ import ecommerce.protobuf.EdaMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +32,9 @@ public class OrderService {
 
     @Autowired
     private CatalogClient catalogClient;
+    
+    @Autowired
+    private OutboxService outboxService;
 
     @Autowired
     private KafkaTemplate<String, byte[]> kafkaTemplate;
@@ -65,6 +71,7 @@ public class OrderService {
         return startOrderDto;
     }
 
+    @Transactional
     public ProductOrder finishOrder(Long orderId, Long paymentMethodId, Long addressId) {
         // 1. 상품 주문 정보 조회
         ProductOrder order = orderRepository.findById(orderId)
@@ -88,8 +95,22 @@ public class OrderService {
                 .orderStatus(OrderStatus.PAYMENT_REQUESTED)
                 .deliveryAddress(address.get("address").toString())
                 .build();
+        
+        orderRepository.save(order);
 
-        return orderRepository.save(order);
+        outboxService.handlePaymentRequestDomainEvent(
+                       EnrichedDomainEvent.builder()
+                               .aggregateType("order")
+                               .aggregateId(order.getId().toString())
+                               .domainEvent(
+                                       OrderFinishedEvent.builder()
+                                               .orderId(order.getId())
+                                               .userId(order.getUserId())
+                                               .productId(order.getProductId())
+                                               .build()
+                               ).build());
+
+        return order;
     }
 
     public List<ProductOrder> getUserOrders(Long userId) {
