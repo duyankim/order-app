@@ -100,9 +100,8 @@ jobs:
           script: |
             cd /home/ec2-user
 
-            echo $ECR_REGISTRY | wc
-            echo $ECR_REPOSITORY | wc
-            echo $GITHUB_SHA
+            echo "🧹 Clean up existing containers"
+            docker compose down || true
       
             echo "🔐 Logging in to ECR"
             aws ecr get-login-password --region $AWS_REGION | \
