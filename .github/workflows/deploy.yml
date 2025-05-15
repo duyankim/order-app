@@ -101,7 +101,8 @@ jobs:
             cd /home/ec2-user
 
             echo "🧹 Clean up existing containers"
-            docker compose down || true
+            docker compose down --remove-orphans || true
+            docker rm -f member-service delivery-service payment-service || true
       
             echo "🔐 Logging in to ECR"
             aws ecr get-login-password --region $AWS_REGION | \
