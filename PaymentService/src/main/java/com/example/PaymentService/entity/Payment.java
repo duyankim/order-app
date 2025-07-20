@@ -31,6 +31,7 @@ public class Payment {
 
     private String paymentData; // 실제로는 결제수단별로 다른 테이블 생성해서 data는 그 테이블로 넣어야 함
 
+    @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
     @Column(unique = true)
